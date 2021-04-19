@@ -1,0 +1,21 @@
+﻿Service Reference de AEAT:
+http://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/burt/jdit/ws/VNifV2.wsdl
+
+
+En las variables del exo_ogen se crean 3 variables:
+
+-ValidaCIF_Cert -> url donde se almacen el certificado
+-ValidaCIF_Pass -> contraseña del certificado
+-ValidaCIF_AvisoRestriccion - 3 valores para funcionamiento del sistema:
+  - N -> no se ejecuta la comprobación
+  - A -> Avisa y pregunta si continuar
+  - R -> Restinge en caso de error y no deja actualizar/crear.
+
+La AEAT puede devolver los siguientes resultados:
+
+“Identificado” Si el contribuyente se identifica con los datos identificativos aportados. Se devuelven los datos de apellidos y nombre asociados al NIF.
+“No identificado-similar”: Si el contribuyente no se identifica con los datos identificativos aportados por diferencias menores en los apellidos y nombre. Se devuelven los datos de apellidos y nombre asociados al NIF.
+“No identificado”: Si el contribuyente no se identifica con los datos identificativos aportados. Se devuelven los datos de NIF y apellidos y nombre aportados.
+“Identificado-Baja”. Si el contribuyente se identifica con el NIF aportado, y está en estado baja. Se devuelve el NIF actual y su razón social.
+“Identificado-Revocado”. Si el contribuyente se identifica con el NIF y esta revocado
+

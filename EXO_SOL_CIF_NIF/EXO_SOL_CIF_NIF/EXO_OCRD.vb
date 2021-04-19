@@ -1,4 +1,5 @@
-﻿Imports System.Xml
+﻿Imports System.ServiceModel
+Imports System.Xml
 Imports SAPbouiCOM
 Public Class EXO_OCRD
     Inherits EXO_UIAPI.EXO_DLLBase
@@ -128,17 +129,52 @@ Public Class EXO_OCRD
             Return False
         End Try
     End Function
+    Public Overrides Function SBOApp_FormDataEvent(infoEvento As BusinessObjectInfo) As Boolean
+        Dim resultado As Boolean = True
+        Dim formulario As SAPbouiCOM.Form = Nothing
+        Try
+            If infoEvento.BeforeAction Then
+                Select Case infoEvento.FormTypeEx
+                    Case "134"
+                        Select Case infoEvento.EventType
+                            Case BoEventTypes.et_FORM_DATA_ADD, BoEventTypes.et_FORM_DATA_UPDATE
+                                formulario = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
+                                If formulario.DataSources.DBDataSources.Item("OCRD").GetValue("CardName", 0) = "" Or formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0) = "" Then
+                                    objGlobal.SBOApp.MessageBox("La razón social y el CIF son obligatorios.")
+                                    Return False
+                                Else
+                                    If Left(formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0), 2) = "ES" Then
+                                        resultado = ComprobarCIFporAEAT(formulario, infoEvento)
+                                    End If
+                                End If
+                        End Select
+                End Select
+            End If
+        Catch exCOM As System.Runtime.InteropServices.COMException
+            objGlobal.Mostrar_Error(exCOM, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+            Return False
+        Catch ex As Exception
+            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+            Return False
+        Finally
+            EXO_CleanCOM.CLiberaCOM.Form(formulario)
+        End Try
+        Return resultado
+    End Function
     Private Function EventHandler_VALIDATE_Before(ByRef pVal As ItemEvent) As Boolean
         Dim oForm As SAPbouiCOM.Form = objGlobal.SBOApp.Forms.Item(pVal.FormUID)
 
         EventHandler_VALIDATE_Before = False
         Try
-
             Select Case pVal.ColUID
                 Case "41"
                     'Controlamos el CIF
                     If ComprobarCIFporAEAT(oForm, pVal) = True Then
-                        EventHandler_VALIDATE_Before = True
+                        If ComprobarsiExisteCIF(oForm) = True Then
+                            EventHandler_VALIDATE_Before = True
+                        Else
+                            EventHandler_VALIDATE_Before = False
+                        End If
                     Else
                         EventHandler_VALIDATE_Before = False
                     End If
@@ -155,7 +191,8 @@ Public Class EXO_OCRD
             EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oForm, Object))
         End Try
     End Function
-    Friend Function ComprobarCIFporAEAT(ByRef formulario As SAPbouiCOM.Form, ByRef infoEvento As BusinessObjectInfo) As Boolean
+    Private Function ComprobarCIFporAEAT(ByRef formulario As SAPbouiCOM.Form, ByRef infoEvento As BusinessObjectInfo) As Boolean
+        ComprobarCIFporAEAT = False
         Try
 
             'comprobamos si la variable tiene control de cif
@@ -247,9 +284,42 @@ Public Class EXO_OCRD
             End If
 
         Catch ex As Exception
-            objGlobal.SBOApp.MessageBox(ex.Message)
+            If ex.Message = "Salt no tiene al menos ocho bytes." Then
+                objGlobal.SBOApp.MessageBox("Revise los datos del certificado")
+            Else
+                objGlobal.SBOApp.MessageBox(ex.Message)
+            End If
         End Try
-
-        Return True
+    End Function
+    Private Function ComprobarsiExisteCIF(ByRef oForm As SAPbouiCOM.Form) As Boolean
+        ComprobarsiExisteCIF = False
+        Dim sSQL As String = "" : Dim sNIF As String = "" : Dim sTipo As String = "" : Dim sMensaje As String = ""
+        Dim oRs As SAPbobsCOM.Recordset = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
+        Dim sTable_Origen As String = ""
+        Try
+            sTable_Origen = CType(oForm.Items.Item("5").Specific, SAPbouiCOM.EditText).DataBind.TableName
+            sNIF = CType(oForm.Items.Item("41").Specific, SAPbouiCOM.EditText).Value.ToString
+            sTipo = oForm.DataSources.DBDataSources.Item(sTable_Origen).GetValue("CardType", 0).ToString
+            sSQL = "SELECT ""CardCode"",""CardName"" FROM ""OCRD"" WHERE ""CardType""='" & sTipo & "' "
+            sSQL &= " WHERE ""LicTradNum""='" & sNIF & "'"
+            oRs.DoQuery(sSQL)
+            If oRs.RecordCount > 0 Then
+                sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
+                sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
+                sMensaje &= ChrW(10) & ChrW(13)
+                sMensaje &= "¿Desea continuar?"
+                If objGlobal.SBOApp.MessageBox(sMensaje, 2, "Sí", "No") = 1 Then
+                    ComprobarsiExisteCIF = False
+                Else
+                    ComprobarsiExisteCIF = True
+                End If
+            Else
+                ComprobarsiExisteCIF = True
+            End If
+        Catch ex As Exception
+            objGlobal.SBOApp.MessageBox(ex.Message)
+        Finally
+            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRs, Object))
+        End Try
     End Function
 End Class

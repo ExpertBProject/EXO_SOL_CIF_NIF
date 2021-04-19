@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schema xmlns:VNifV2Ent="http://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/burt/jdit/ws/VNifV2Ent.xsd" elementFormDefault="qualified" targetNamespace="http://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/burt/jdit/ws/VNifV2Ent.xsd" xmlns="http://www.w3.org/2001/XMLSchema">
+  <annotation>
+    <documentation>
+    		Esquema para solicitar la verificaci??n de un NIF
+    	</documentation>
+  </annotation>
+  <element name="VNifV2Ent" type="VNifV2Ent:VNifV2Ent" />
+  <complexType name="VNifV2Ent">
+    <annotation>
+      <documentation>
+				NIF : NIF a verificar
+				Nombre: Nombre o Raz??n Social
+			</documentation>
+    </annotation>
+    <sequence>
+      <element minOccurs="1" maxOccurs="20000" name="Contribuyente">
+        <complexType>
+          <sequence>
+            <element name="Nif" type="string" />
+            <element name="Nombre" type="string" />
+          </sequence>
+        </complexType>
+      </element>
+    </sequence>
+  </complexType>
+</schema>
