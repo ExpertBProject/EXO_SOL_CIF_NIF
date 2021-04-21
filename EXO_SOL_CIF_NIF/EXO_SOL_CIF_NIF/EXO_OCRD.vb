@@ -145,6 +145,9 @@ Public Class EXO_OCRD
                                 Else
                                     If Left(formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0), 2) = "ES" Then
                                         resultado = ComprobarCIFporAEAT(formulario, infoEvento)
+                                    Else
+                                        objGlobal.SBOApp.SetStatusBarMessage("El CIF no comienza por ES. No podemos comprobarlo.", BoMessageTime.bmt_Short, True)
+                                        Return True
                                     End If
                                 End If
                         End Select
@@ -199,7 +202,7 @@ Public Class EXO_OCRD
             Dim TipoComprobacion As String = objGlobal.refDi.OGEN.valorVariable("ValidaCIF_AvisoRestriccion")
 
             Dim ValidaCIF_Cert As String = objGlobal.refDi.OGEN.valorVariable("ValidaCIF_Cert")
-            Dim ValidaCIF_Pass As String = objGlobal.refDi.comunes.cifrador.desencripta(objGlobal.refDi.OGEN.valorVariable("ValidaCIF_Pass"))
+            Dim ValidaCIF_Pass As String = objGlobal.refDi.OGEN.valorVariable("ValidaCIF_Pass")
 
             If ValidaCIF_Pass = "" Or ValidaCIF_Cert = "" Then
                 objGlobal.SBOApp.SetStatusBarMessage("Configure correctamente los parametros del certificado de la AEAT", BoMessageTime.bmt_Short, True)
@@ -279,6 +282,8 @@ Public Class EXO_OCRD
                         objGlobal.SBOApp.MessageBox("El CIF no está identificado.")
                         Return False
                     End If
+                Else
+                    Return True
                 End If
 
             End If
