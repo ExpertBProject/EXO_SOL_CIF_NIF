@@ -144,7 +144,16 @@ Public Class EXO_OCRD
                                     Return False
                                 Else
                                     If Left(formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0), 2) = "ES" Then
-                                        resultado = ComprobarCIFporAEAT(formulario, infoEvento)
+                                        If ComprobarCIFporAEAT(formulario, infoEvento) = True Then
+                                            If ComprobarsiExisteCIF(formulario) = True Then
+                                                resultado = True
+                                            Else
+                                                resultado = False
+                                            End If
+                                        Else
+                                            resultado = False
+                                        End If
+
                                     Else
                                         objGlobal.SBOApp.SetStatusBarMessage("El CIF no comienza por ES. No podemos comprobarlo.", BoMessageTime.bmt_Short, True)
                                         Return True
@@ -169,7 +178,7 @@ Public Class EXO_OCRD
 
         EventHandler_VALIDATE_Before = False
         Try
-            Select Case pVal.ColUID
+            Select Case pVal.ItemUID
                 Case "41"
                     'Controlamos el CIF
                     If ComprobarCIFporAEAT(oForm, pVal) = True Then
@@ -306,7 +315,7 @@ Public Class EXO_OCRD
             sNIF = CType(oForm.Items.Item("41").Specific, SAPbouiCOM.EditText).Value.ToString
             sTipo = oForm.DataSources.DBDataSources.Item(sTable_Origen).GetValue("CardType", 0).ToString
             sSQL = "SELECT ""CardCode"",""CardName"" FROM ""OCRD"" WHERE ""CardType""='" & sTipo & "' "
-            sSQL &= " WHERE ""LicTradNum""='" & sNIF & "'"
+            sSQL &= " and ""LicTradNum""='" & sNIF & "'"
             oRs.DoQuery(sSQL)
             If oRs.RecordCount > 0 Then
                 sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
@@ -314,9 +323,9 @@ Public Class EXO_OCRD
                 sMensaje &= ChrW(10) & ChrW(13)
                 sMensaje &= "¿Desea continuar?"
                 If objGlobal.SBOApp.MessageBox(sMensaje, 2, "Sí", "No") = 1 Then
-                    ComprobarsiExisteCIF = False
-                Else
                     ComprobarsiExisteCIF = True
+                Else
+                    ComprobarsiExisteCIF = False
                 End If
             Else
                 ComprobarsiExisteCIF = True
