@@ -251,7 +251,8 @@ Public Class EXO_OCRD
                 oEntrada.VNifV2Ent = contribuyente
 
                 objGlobal.SBOApp.SetStatusBarMessage("Validando CIF con AEAT.", BoMessageTime.bmt_Short, False)
-                Dim osalida As AEAT.Salida = clientews.AEAT_VNifV2_VNifV2(oEntrada)
+                Dim osalida As AEAT.Salida = Nothing
+                osalida = clientews.AEAT_VNifV2_VNifV2(oEntrada)
                 Dim res As String = osalida.VNifV2Sal(0).Resultado
 
                 'info del doc de la AEAT
