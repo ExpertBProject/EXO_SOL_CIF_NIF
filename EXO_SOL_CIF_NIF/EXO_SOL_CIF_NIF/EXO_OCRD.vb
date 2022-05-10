@@ -3,7 +3,6 @@ Imports System.Xml
 Imports SAPbouiCOM
 Public Class EXO_OCRD
     Inherits EXO_UIAPI.EXO_DLLBase
-
     Public Sub New(ByRef oObjGlobal As EXO_UIAPI.EXO_UIAPI, ByRef actualizar As Boolean, usaLicencia As Boolean, idAddOn As Integer)
         MyBase.New(oObjGlobal, actualizar, False, idAddOn)
 
@@ -11,7 +10,6 @@ Public Class EXO_OCRD
             cargaCampos()
         End If
     End Sub
-
     Private Sub cargaCampos()
         If objDIAPI.comunes.esAdministrador() Then
             objGlobal.escribeLog("El usuario es administrador")
@@ -319,17 +317,24 @@ Public Class EXO_OCRD
             sSQL &= " and ""LicTradNum""='" & sNIF & "'"
             oRs.DoQuery(sSQL)
             If oRs.RecordCount > 0 Then
+                '##########################################################################################################################
+                '## MODIFICADO POR PETICION DE TIARA DIA 20220510                                                                        ##
+                'sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
+                ' sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
+                'sMensaje &= ChrW(10) & ChrW(13)
+                'sMensaje &= "¿Desea continuar?"
+                'If objGlobal.SBOApp.MessageBox(sMensaje, 2, "Sí", "No") = 1 Then
+                'ComprobarsiExisteCIF = True
+                'Else
+                'ComprobarsiExisteCIF = False
+                'End If
+                '##########################################################################################################################
                 sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
                 sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
-                sMensaje &= ChrW(10) & ChrW(13)
-                sMensaje &= "¿Desea continuar?"
-                If objGlobal.SBOApp.MessageBox(sMensaje, 2, "Sí", "No") = 1 Then
-                    ComprobarsiExisteCIF = True
-                Else
-                    ComprobarsiExisteCIF = False
-                End If
+                objGlobal.SBOApp.MessageBox(sMensaje)
+                ComprobarsiExisteCIF = False
             Else
-                ComprobarsiExisteCIF = True
+                    ComprobarsiExisteCIF = True
             End If
         Catch ex As Exception
             objGlobal.SBOApp.MessageBox(ex.Message)
