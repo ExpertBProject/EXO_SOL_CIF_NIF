@@ -137,24 +137,30 @@ Public Class EXO_OCRD
                         Select Case infoEvento.EventType
                             Case BoEventTypes.et_FORM_DATA_ADD, BoEventTypes.et_FORM_DATA_UPDATE
                                 formulario = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
-                                If formulario.DataSources.DBDataSources.Item("OCRD").GetValue("CardName", 0) = "" Or formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0) = "" Then
-                                    objGlobal.SBOApp.MessageBox("La razón social y el CIF son obligatorios.")
-                                    Return False
+                                ' 20220511
+                                ' Con el Addon de Intercompany creación proveedores en destino no deja grabar al no tener el nombre 
+                                ' Cambiamos Tiara y Oscar.
+                                If objGlobal.compañia.CompanyDB <> "EMPRESA_CONSOLIDACION" And formulario.DataSources.DBDataSources.Item("OCRD").GetValue("CardType", 0) <> "C" Then
                                 Else
-                                    If Left(formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0), 2) = "ES" Then
-                                        If ComprobarCIFporAEAT(formulario, infoEvento) = True Then
-                                            If ComprobarsiExisteCIF(formulario) = True Then
-                                                resultado = True
+                                    If formulario.DataSources.DBDataSources.Item("OCRD").GetValue("CardName", 0) = "" Or formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0) = "" Then
+                                        objGlobal.SBOApp.MessageBox("La razón social y el CIF son obligatorios.")
+                                        Return False
+                                    Else
+                                        If Left(formulario.DataSources.DBDataSources.Item("OCRD").GetValue("LicTradNum", 0), 2) = "ES" Then
+                                            If ComprobarCIFporAEAT(formulario, infoEvento) = True Then
+                                                If ComprobarsiExisteCIF(formulario) = True Then
+                                                    resultado = True
+                                                Else
+                                                    resultado = False
+                                                End If
                                             Else
                                                 resultado = False
                                             End If
-                                        Else
-                                            resultado = False
-                                        End If
 
-                                    Else
-                                        objGlobal.SBOApp.SetStatusBarMessage("El CIF no comienza por ES. No podemos comprobarlo.", BoMessageTime.bmt_Short, True)
-                                        Return True
+                                        Else
+                                            objGlobal.SBOApp.SetStatusBarMessage("El CIF no comienza por ES. No podemos comprobarlo.", BoMessageTime.bmt_Short, True)
+                                            Return True
+                                        End If
                                     End If
                                 End If
                         End Select
