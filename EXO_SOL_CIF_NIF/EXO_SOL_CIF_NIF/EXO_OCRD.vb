@@ -306,36 +306,42 @@ Public Class EXO_OCRD
     End Function
     Private Function ComprobarsiExisteCIF(ByRef oForm As SAPbouiCOM.Form) As Boolean
         ComprobarsiExisteCIF = False
-        Dim sSQL As String = "" : Dim sNIF As String = "" : Dim sTipo As String = "" : Dim sMensaje As String = ""
+        Dim sSQL As String = "" : Dim sNIF As String = "" : Dim sCardCode As String = "" : Dim sTipo As String = "" : Dim sMensaje As String = ""
         Dim oRs As SAPbobsCOM.Recordset = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
         Dim sTable_Origen As String = ""
         Try
-            sTable_Origen = CType(oForm.Items.Item("5").Specific, SAPbouiCOM.EditText).DataBind.TableName
-            sNIF = CType(oForm.Items.Item("41").Specific, SAPbouiCOM.EditText).Value.ToString
-            sTipo = oForm.DataSources.DBDataSources.Item(sTable_Origen).GetValue("CardType", 0).ToString
-            sSQL = "SELECT ""CardCode"",""CardName"" FROM ""OCRD"" WHERE ""CardType""='" & sTipo & "' "
-            sSQL &= " and ""LicTradNum""='" & sNIF & "'"
-            oRs.DoQuery(sSQL)
-            If oRs.RecordCount > 0 Then
-                '##########################################################################################################################
-                '## MODIFICADO POR PETICION DE TIARA DIA 20220510                                                                        ##
-                'sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
-                ' sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
-                'sMensaje &= ChrW(10) & ChrW(13)
-                'sMensaje &= "¿Desea continuar?"
-                'If objGlobal.SBOApp.MessageBox(sMensaje, 2, "Sí", "No") = 1 Then
-                'ComprobarsiExisteCIF = True
-                'Else
-                'ComprobarsiExisteCIF = False
-                'End If
-                '##########################################################################################################################
-                sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
-                sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
-                objGlobal.SBOApp.MessageBox(sMensaje)
-                ComprobarsiExisteCIF = False
-            Else
+            If oForm.Mode = BoFormMode.fm_ADD_MODE Or oForm.Mode = BoFormMode.fm_UPDATE_MODE Then
+                sTable_Origen = CType(oForm.Items.Item("5").Specific, SAPbouiCOM.EditText).DataBind.TableName
+                sNIF = CType(oForm.Items.Item("41").Specific, SAPbouiCOM.EditText).Value.ToString
+                sCardCode = CType(oForm.Items.Item("5").Specific, SAPbouiCOM.EditText).Value.ToString
+                sTipo = oForm.DataSources.DBDataSources.Item(sTable_Origen).GetValue("CardType", 0).ToString
+                sSQL = "SELECT ""CardCode"",""CardName"" FROM ""OCRD"" WHERE ""CardType""='" & sTipo & "' "
+                sSQL &= " and ""LicTradNum""='" & sNIF & "' and ""CardCode""<>'" & sCardCode & "' "
+                oRs.DoQuery(sSQL)
+                If oRs.RecordCount > 0 Then
+                    '##########################################################################################################################
+                    '## MODIFICADO POR PETICION DE TIARA DIA 20220510                                                                        ##
+                    'sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
+                    ' sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
+                    'sMensaje &= ChrW(10) & ChrW(13)
+                    'sMensaje &= "¿Desea continuar?"
+                    'If objGlobal.SBOApp.MessageBox(sMensaje, 2, "Sí", "No") = 1 Then
+                    'ComprobarsiExisteCIF = True
+                    'Else
+                    'ComprobarsiExisteCIF = False
+                    'End If
+                    '##########################################################################################################################
+                    sMensaje = "Ya existe el Nº de Identificación fiscal con el Interlocutor: " & oRs.Fields.Item("CardCode").Value.ToString
+                    sMensaje &= " - " & oRs.Fields.Item("CardName").Value.ToString
+                    objGlobal.SBOApp.MessageBox(sMensaje)
+                    ComprobarsiExisteCIF = False
+                Else
                     ComprobarsiExisteCIF = True
+                End If
+            Else
+                ComprobarsiExisteCIF = True
             End If
+
         Catch ex As Exception
             objGlobal.SBOApp.MessageBox(ex.Message)
         Finally
